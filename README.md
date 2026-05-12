@@ -57,3 +57,4 @@ AUTO_UPLOAD_PATCHES.md
 7. Reopen/refresh the other device and confirm data updated.
 
 This version uses Supabase realtime records as the shared source.
+# duet-tracker
