@@ -1,0 +1,63 @@
+// ADD THESE INSIDE EACH TRACKER CARD
+// Replace the existing "Start Timer Now" button section with this block.
+
+<div className="mt-4 grid gap-2">
+  <button
+    type="button"
+    onClick={() => updateTracker(tracker.id, !tracker.completed)}
+    className="rounded-xl bg-white px-4 py-3 font-semibold text-zinc-950 hover:bg-zinc-200"
+  >
+    {tracker.completed ? "Mark Open" : "Mark Done"}
+  </button>
+
+  <button
+    type="button"
+    onClick={() => resetTrackerNow(tracker.id)}
+    className="rounded-xl bg-zinc-800 px-4 py-3 font-semibold text-white hover:bg-zinc-700"
+  >
+    Start Timer Now
+  </button>
+
+  {/* NEW MANUAL DATE EDITOR */}
+  <input
+    type="datetime-local"
+    value={
+      tracker.lastResetAt
+        ? new Date(tracker.lastResetAt)
+            .toISOString()
+            .slice(0, 16)
+        : ""
+    }
+    onChange={(event) => {
+      const newDate = new Date(event.target.value);
+
+      if (Number.isNaN(newDate.getTime())) return;
+
+      setTrackers((prev) =>
+        prev.map((item) =>
+          item.id === tracker.id
+            ? {
+                ...item,
+                lastResetAt: newDate.toISOString(),
+              }
+            : item
+        )
+      );
+    }}
+    className="rounded-xl bg-zinc-800 p-3 text-white outline-none"
+  />
+
+  <p className="text-xs text-zinc-500">
+    Manually adjust reset start date/time.
+  </p>
+
+  {tracker.id.startsWith("custom-rolling-") && (
+    <button
+      type="button"
+      onClick={() => deleteTracker(tracker.id)}
+      className="rounded-xl bg-red-500 px-4 py-3 font-semibold text-white hover:bg-red-400"
+    >
+      Delete
+    </button>
+  )}
+</div>

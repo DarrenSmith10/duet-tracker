@@ -1,0 +1,14 @@
+Install packages if not already installed:
+
+npm install web-push
+npm install -D @types/web-push
+
+Generate VAPID keys if not already done:
+
+npx web-push generate-vapid-keys
+
+Add these to .env.local and Vercel:
+
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_CONTACT_EMAIL=you@example.com

@@ -1,0 +1,74 @@
+// Add this import near the top of src/app/forge-queue/page.tsx:
+
+import {
+  requestNotificationPermission,
+  sendForgeCompleteNotification,
+} from "@/lib/notifications";
+
+// Add this field to new queue items:
+notified: false,
+
+// Add this state inside ForgeQueuePage:
+const [notificationStatus, setNotificationStatus] = useState("default");
+
+// Add this useEffect inside ForgeQueuePage:
+useEffect(() => {
+  if ("Notification" in window) {
+    setNotificationStatus(Notification.permission);
+  }
+}, []);
+
+// Add this function inside ForgeQueuePage:
+async function enableNotifications() {
+  const permission = await requestNotificationPermission();
+  setNotificationStatus(permission);
+}
+
+// Add this useEffect inside ForgeQueuePage, after your timer interval useEffect:
+useEffect(() => {
+  const finishedUnnotified = queue.filter(
+    (item) => !item.claimed && !item.notified && getRemainingMs(item) <= 0
+  );
+
+  if (finishedUnnotified.length === 0) return;
+
+  finishedUnnotified.forEach((item) => {
+    sendForgeCompleteNotification(item.itemName);
+  });
+
+  setQueue((prev) =>
+    prev.map((item) =>
+      finishedUnnotified.some((finished) => finished.id === item.id)
+        ? { ...item, notified: true }
+        : item
+    )
+  );
+}, [now, queue]);
+
+// Add this notification button section above Start New Forge:
+<section className="mb-6 rounded-2xl bg-zinc-900 p-5 shadow-lg">
+  <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+    <div>
+      <h2 className="text-xl font-bold">Notifications</h2>
+      <p className="mt-1 text-sm text-zinc-400">
+        Get a browser notification when a forge timer finishes.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      onClick={enableNotifications}
+      className="rounded-xl bg-white px-5 py-3 font-semibold text-zinc-950 hover:bg-zinc-200"
+    >
+      {notificationStatus === "granted"
+        ? "Notifications Enabled"
+        : "Enable Notifications"}
+    </button>
+  </div>
+
+  {notificationStatus === "denied" && (
+    <p className="mt-3 text-sm text-red-300">
+      Notifications are blocked in your browser settings for this site.
+    </p>
+  )}
+</section>
