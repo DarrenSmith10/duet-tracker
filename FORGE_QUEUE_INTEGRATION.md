@@ -1,85 +1,55 @@
-# Forge Queue Inventory Cost Checker
+# Forge Queue Server Push Integration
 
-## Copy files
+This lets forge-complete notifications arrive even when the PWA is closed.
+
+## 1. Copy files
+
+Copy the package files into your project.
+
+## 2. Add import
+
+Open:
 
 ```txt
-src/lib/inventoryCostChecker.ts
-src/components/InventoryCostChecker.tsx
+src/app/forge-queue/page.tsx
 ```
 
-## Update `src/app/forge-queue/page.tsx`
-
-Add imports:
+Add:
 
 ```tsx
-import InventoryCostChecker from "@/components/InventoryCostChecker";
-
-import { materials as defaultMaterials } from "@/data/materials";
-
 import {
-  checkMaterialCosts,
-} from "@/lib/inventoryCostChecker";
+  getForgeNotificationKey,
+  scheduleClientNotification,
+} from "@/lib/push/clientSchedule";
 ```
 
-Update your type import:
+## 3. Schedule notification when starting forge
+
+Find your `startForge()` function.
+
+After you create `queueItem`, add this before or after `setQueue(...)`:
 
 ```tsx
-import type {
-  ForgeMaterialRequirement,
-  ForgeQueueItem,
-  MaterialInventoryItem,
-} from "@/lib/types";
+const notifyAt = new Date(
+  new Date(queueItem.startedAt).getTime() +
+    queueItem.durationMinutes * 60 * 1000
+).toISOString();
+
+scheduleClientNotification({
+  notificationKey: getForgeNotificationKey(queueItem.id),
+  type: "forge-complete",
+  title: "Forge Complete",
+  body: `${queueItem.itemName} is ready to claim.`,
+  url: "/forge-queue",
+  notifyAt,
+}).catch(() => {
+  // Notification scheduling can fail if offline. Forge timer still works.
+});
 ```
 
-Inside `ForgeQueuePage()` add:
+## 4. Result
 
-```tsx
-const [materialsInventory, setMaterialsInventory] =
-  useState<MaterialInventoryItem[]>(defaultMaterials);
-```
-
-Add this effect:
-
-```tsx
-useEffect(() => {
-  const savedMaterials = localStorage.getItem("materials");
-
-  if (savedMaterials) {
-    setMaterialsInventory(JSON.parse(savedMaterials));
-  }
-}, []);
-```
-
-After:
-
-```tsx
-const selectedTotalMaterials = selectedRecipe
-  ? getTotalMaterials(selectedRecipe.materials, safeQuantity)
-  : [];
-```
-
-add:
-
-```tsx
-const materialCostChecks = checkMaterialCosts(
-  selectedTotalMaterials,
-  materialsInventory
-);
-```
-
-Under the Required Materials grid, add:
-
-```tsx
-<InventoryCostChecker checks={materialCostChecks} />
-```
-
-## Result
-
-Forge Queue will show:
-
-```txt
-Required
-Owned
-Missing
-OK / Missing
-```
+When a forge is started:
+- the finish time is saved to Supabase
+- Vercel Cron checks every 5 minutes
+- push notification sends even if mobile PWA is closed

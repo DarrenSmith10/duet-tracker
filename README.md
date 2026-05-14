@@ -1,60 +1,105 @@
-# Realtime Supabase Sync
+# Server Scheduled Push Notifications
 
-This package adds realtime sync for:
+This package adds background push notifications that work when the mobile PWA is closed.
+
+## What it adds
 
 ```txt
-materials
-forgeQueue
-forgeHistory
-dailyTasks
-weeklyTasks
-quickNotes
-customForgeRecipes
-recipeOverrides
+Supabase scheduled_notifications table
+Vercel Cron every 5 minutes
+/api/cron/send-notifications
+/api/notifications/schedule
+push scheduler helpers
+forge queue integration guide
+reset tracker integration guide
 ```
 
-## 1. Run SQL in Supabase
+## 1. Run Supabase SQL
 
 Open Supabase SQL Editor and run:
 
 ```txt
-supabase/realtime-save-schema.sql
+supabase/scheduled-notifications-schema.sql
 ```
 
 ## 2. Copy files
 
-```txt
-src/lib/realtimeSaveKeys.ts
-src/lib/supabase/realtimeSync.ts
-src/hooks/useRealtimeSaveSync.ts
-src/components/RealtimeSyncPanel.tsx
-```
-
-## 3. Add panel to Cloud Save page
-
-Follow:
+Copy:
 
 ```txt
-CLOUD_SAVE_PAGE_PATCH.md
+src/lib/push/sendPush.ts
+src/lib/push/scheduler.ts
+src/lib/push/clientSchedule.ts
+src/app/api/cron/send-notifications/route.ts
+src/app/api/notifications/schedule/route.ts
+vercel.json
 ```
 
-## 4. Optional auto-upload
+If you already have `vercel.json`, merge the `crons` section instead of replacing it.
 
-Follow:
+## 3. Environment variables
+
+Make sure these exist locally and in Vercel:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_CONTACT_EMAIL=
+CRON_SECRET=
+```
+
+`CRON_SECRET` is optional in this package. If you add it, external callers need:
 
 ```txt
-AUTO_UPLOAD_PATCHES.md
+Authorization: Bearer YOUR_SECRET
 ```
 
-## 5. Test
+Vercel Cron normally calls your route automatically.
 
-1. Sign in on `/cloud-save`.
-2. Press `Upload Local`.
-3. Open app on iPhone and sign in.
-4. Press `Download Cloud`.
-5. Press `Start Live Sync` on both devices.
-6. Change materials on one device.
-7. Reopen/refresh the other device and confirm data updated.
+## 4. Install packages
 
-This version uses Supabase realtime records as the shared source.
-# duet-tracker
+```bash
+npm install web-push
+npm install -D @types/web-push
+```
+
+## 5. Add integrations
+
+For forge notifications:
+
+```txt
+FORGE_QUEUE_INTEGRATION.md
+```
+
+For reset notifications:
+
+```txt
+RESET_TRACKER_INTEGRATION.md
+```
+
+## 6. Deploy
+
+```bash
+npm run build
+vercel --prod
+```
+
+## 7. Test cron manually
+
+Open in browser:
+
+```txt
+https://YOUR-APP.vercel.app/api/cron/send-notifications
+```
+
+If using `CRON_SECRET`, test with curl:
+
+```bash
+curl -H "Authorization: Bearer YOUR_SECRET" https://YOUR-APP.vercel.app/api/cron/send-notifications
+```
+
+## Important
+
+Vercel Cron only runs on deployed Vercel projects, not normal localhost dev.

@@ -16,6 +16,12 @@ import {
   type RollingResetTracker,
 } from "@/lib/monthlyReset";
 
+import {
+  getResetNotificationKey,
+  scheduleClientNotification,
+} from "@/lib/push/clientSchedule";
+
+
 function formatNumber(value: number) {
   return new Intl.NumberFormat().format(value);
 }
@@ -135,23 +141,48 @@ export default function MonthlyResetPanel() {
               completed,
             }
           : tracker
+          
       )
+      
     );
+    
   }
 
   function resetTrackerNow(id: string) {
-    setTrackers((prev) =>
-      prev.map((tracker) =>
-        tracker.id === id
-          ? {
-              ...tracker,
-              completed: false,
-              lastResetAt: getNowIso(),
-            }
-          : tracker
-      )
-    );
-  }
+  const trackerToReset = trackers.find((tracker) => tracker.id === id);
+
+  if (!trackerToReset) return;
+
+  const resetStartedAt = new Date();
+  const nextResetAt = new Date(resetStartedAt);
+  nextResetAt.setDate(nextResetAt.getDate() + trackerToReset.intervalDays);
+
+  setTrackers((prev) =>
+    prev.map((tracker) =>
+      tracker.id === id
+        ? {
+            ...tracker,
+            completed: false,
+            lastResetAt: resetStartedAt.toISOString(),
+          }
+        : tracker
+    )
+  );
+
+  scheduleClientNotification({
+    notificationKey: getResetNotificationKey(
+      trackerToReset.id,
+      nextResetAt.toISOString()
+    ),
+    type: "reset",
+    title: `${trackerToReset.title} Reset`,
+    body: `${trackerToReset.title} is ready again.`,
+    url: "/daily-notes",
+    notifyAt: nextResetAt.toISOString(),
+  }).catch(() => {
+    // If offline or not signed in, local reset timer still works.
+  });
+}
 
   function resetAllNow() {
     const confirmed = window.confirm("Reset all rolling shop trackers now?");

@@ -25,9 +25,15 @@ import {
   sendForgeCompleteNotification,
 } from "@/lib/notifications";
 
+
 import { getRecipeOverride } from "@/lib/recipeOverrides";
 
 import { pushSaveKeyToSupabase } from "@/lib/supabase/realtimeSync";
+
+import {
+  getForgeNotificationKey,
+  scheduleClientNotification,
+} from "@/lib/push/clientSchedule";
 
 import type {
   ForgeMaterialRequirement,
@@ -466,6 +472,23 @@ export default function ForgeQueuePage() {
       claimed: false,
       notified: false,
     };
+
+    const notifyAt = new Date(
+  new Date(queueItem.startedAt).getTime() +
+    queueItem.durationMinutes * 60 * 1000
+).toISOString();
+
+scheduleClientNotification({
+  notificationKey: getForgeNotificationKey(queueItem.id),
+  type: "forge-complete",
+  title: "Forge Complete",
+  body: `${queueItem.itemName} is ready to claim.`,
+  url: "/forge-queue",
+  notifyAt,
+}).catch(() => {
+  // Notification scheduling can fail if offline. Forge timer still works.
+});
+
 
     setQueue((prev) => [queueItem, ...prev]);
   }

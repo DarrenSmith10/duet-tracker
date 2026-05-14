@@ -1,27 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { subscribeToPush } from "@/lib/push";
 
 export default function NotificationsPage() {
   const [status, setStatus] = useState("");
+  const [pushEnabled, setPushEnabled] = useState(false);
+
+  useEffect(() => {
+  const saved = localStorage.getItem("pushNotificationsEnabled") === "true";
+  const granted =
+    typeof Notification !== "undefined" &&
+    Notification.permission === "granted";
+
+  setPushEnabled(saved && granted);
+}, []);
 
   async function enablePush() {
-    setStatus("Requesting push notification permission...");
+  setStatus("Requesting push notification permission...");
 
-    try {
-      await subscribeToPush();
-      setStatus("Push notifications enabled for this device.");
-    } catch (error) {
-      console.error(error);
-      setStatus(
-        error instanceof Error
-          ? error.message
-          : "Could not enable push notifications."
-      );
-    }
+  try {
+    await subscribeToPush();
+
+    localStorage.setItem("pushNotificationsEnabled", "true");
+    setPushEnabled(true);
+
+    setStatus("Push notifications enabled for this device.");
+  } catch (error) {
+    console.error(error);
+
+    setStatus(
+      error instanceof Error
+        ? error.message
+        : "Could not enable push notifications."
+    );
   }
+}
 
   async function sendTest() {
     setStatus("Sending test push...");
@@ -56,12 +71,13 @@ export default function NotificationsPage() {
       <section className="rounded-2xl bg-zinc-900 p-5 shadow-lg ring-1 ring-zinc-800">
         <div className="grid gap-3 md:grid-cols-2">
           <button
-            type="button"
-            onClick={enablePush}
-            className="rounded-xl bg-white px-5 py-3 font-semibold text-zinc-950 hover:bg-zinc-200"
-          >
-            Enable Push Notifications
-          </button>
+  type="button"
+  onClick={enablePush}
+  disabled={pushEnabled}
+  className="rounded-xl bg-white px-5 py-3 font-semibold text-zinc-950 hover:bg-zinc-200 disabled:opacity-50"
+>
+  {pushEnabled ? "Push Notifications Enabled" : "Enable Push Notifications"}
+</button>
 
           <button
             type="button"

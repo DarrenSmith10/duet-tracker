@@ -6,13 +6,14 @@ export default function ServiceWorkerRegister() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 
-    window.addEventListener("load", () => {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .catch((error) => {
-          console.error("Service worker registration failed:", error);
-        });
-    });
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((registration) => {
+        console.log("Service worker registered:", registration);
+      })
+      .catch((error) => {
+        console.error("Service worker registration failed:", error);
+      });
   }, []);
 
   return null;

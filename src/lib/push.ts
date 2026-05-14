@@ -40,6 +40,7 @@ export async function subscribeToPush() {
       applicationServerKey: urlBase64ToUint8Array(vapidKey),
     });
   }
+  console.log("Saving subscription:", subscription);
 
   const response = await fetch("/api/push/subscribe", {
     method: "POST",
@@ -48,6 +49,9 @@ export async function subscribeToPush() {
     },
     body: JSON.stringify(subscription),
   });
+
+  console.log("Subscribe response:", response.status);
+console.log(await response.text());
 
   if (!response.ok) {
     throw new Error("Could not save push subscription.");

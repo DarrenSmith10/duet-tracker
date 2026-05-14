@@ -4,6 +4,7 @@ import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
 import AutoRealtimeSync from "@/components/AutoRealtimeSync";
+import ServiceWorkerRegister from "./ServiceWorkerRegister";
 
 export default function RootLayout({
   children,
@@ -13,6 +14,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-zinc-950 text-white">
+        <ServiceWorkerRegister />
         <AutoRealtimeSync />
         <MobileNav />
         <div className="flex min-h-screen">

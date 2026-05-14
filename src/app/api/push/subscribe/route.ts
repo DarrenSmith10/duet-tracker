@@ -22,7 +22,18 @@ export async function POST(request: Request) {
       updated_at: new Date().toISOString(),
     });
 
-    if (error) throw error;
+    if (error) {
+  return NextResponse.json(
+    {
+      error: "Supabase insert failed",
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    },
+    { status: 500 }
+  );
+}
 
     return NextResponse.json({ ok: true });
   } catch (error) {

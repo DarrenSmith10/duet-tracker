@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 
 import {
   buildDailyResetNotification,
@@ -9,6 +9,8 @@ import {
   notifyOncePerReset,
   requestResetNotificationPermission,
 } from "@/lib/resetNotifications";
+
+import { subscribeToPush } from "@/lib/push";
 
 import {
   MONTHLY_RESET_STORAGE_KEY,
@@ -36,10 +38,31 @@ export default function ResetNotificationWatcher() {
   const [permission, setPermission] = useState<ResetPermissionSatus>("default");
 
   async function enableNotifications() {
-    const result = await requestResetNotificationPermission();
-    setPermission(result);
-  }
+  try {
+    await subscribeToPush();
 
+    if ("Notification" in window) {
+      setPermission(Notification.permission);
+    } else {
+      setPermission("unsupported");
+    }
+  } catch (error) {
+    console.error(error);
+
+    if ("Notification" in window) {
+      setPermission(Notification.permission);
+    }
+  }
+}
+
+  useEffect(() => {
+    if (!("Notification" in window)){
+      setPermission("unsupported");
+      return;
+    }
+      setPermission(Notification.permission);
+  }, []);
+  
   useEffect(() => {
     function checkResets() {
       notifyOncePerReset(buildDailyResetNotification());
@@ -77,12 +100,13 @@ export default function ResetNotificationWatcher() {
         </div>
 
         <button
-          type="button"
-          onClick={enableNotifications}
-          className="rounded-xl bg-white px-5 py-3 font-semibold text-zinc-950 hover:bg-zinc-200"
-        >
-          {permission === "granted" ? "Notifications Enabled" : "Enable Notifications"}
-        </button>
+  type="button"
+  onClick={enableNotifications}
+  disabled={permission === "granted"}
+  className="rounded-xl bg-white px-5 py-3 font-semibold text-zinc-950"
+>
+  {permission === "granted" ? "Notifications Enabled" : "Enable Notifications"}
+</button>
       </div>
 
       {permission === "denied" && (

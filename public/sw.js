@@ -1,18 +1,25 @@
-const CACHE_NAME = "my-dna-companion-tracker-v4";
-const OFFLINE_URL = "/offline.html";
-
-const STATIC_ASSETS = [
-  "/",
-  OFFLINE_URL,
-  "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/apple-touch-icon.png"
-];
+const CACHE_NAME = "dna-tracker-v6";
+const OFFLINE_URL = "/";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then(async (cache) => {
+      const assets = [
+        "/",
+        "/manifest.json",
+        "/icons/icon-192.png",
+        "/icons/icon-512.png",
+        "/icons/apple-touch-icon.png",
+      ];
+
+      await Promise.allSettled(
+        assets.map((asset) =>
+          cache.add(asset).catch(() => {
+            console.warn("Could not cache:", asset);
+          })
+        )
+      );
+    })
   );
 
   self.skipWaiting();
@@ -37,46 +44,24 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
-  const request = event.request;
-
-  if (request.mode === "navigate") {
+  if (event.request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(async () => {
-          const cached = await caches.match(request);
-          return cached || caches.match(OFFLINE_URL);
-        })
+      fetch(event.request).catch(() => caches.match(OFFLINE_URL))
     );
     return;
   }
 
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-
-      return fetch(request)
-        .then((response) => {
-          if (!response || response.status !== 200) return response;
-
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-
-          return response;
-        })
-        .catch(() => caches.match(OFFLINE_URL));
+    caches.match(event.request).then((cached) => {
+      return cached || fetch(event.request);
     })
   );
 });
 
 self.addEventListener("push", (event) => {
   let data = {
-    title: "My DNA Companion Tracker",
-    body: "You have a new tracker notification.",
+    title: "DNA Tracker",
+    body: "You have a new notification.",
     url: "/",
   };
 
@@ -89,7 +74,7 @@ self.addEventListener("push", (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(data.title || "My DNA Companion Tracker", {
+    self.registration.showNotification(data.title || "DNA Tracker", {
       body: data.body || "Notification",
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
@@ -114,9 +99,7 @@ self.addEventListener("notificationclick", (event) => {
         }
       }
 
-      if (clients.openWindow) {
-        return clients.openWindow(url);
-      }
+      return clients.openWindow(url);
     })
   );
 });
