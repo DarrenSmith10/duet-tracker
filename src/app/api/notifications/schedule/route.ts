@@ -1,47 +1,42 @@
 import { NextResponse } from "next/server";
-
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { scheduleNotification } from "@/lib/push/scheduler";
-
-export const dynamic = "force-dynamic";
+import { createServiceSupabaseClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const input = await request.json();
 
-    const {
-      userId,
-      notificationKey,
-      type,
-      title,
-      body: messageBody,
-      url,
-      notifyAt,
-    } = body;
+    const supabase = createServiceSupabaseClient();
 
-    if (!type || !title || !messageBody || !notifyAt) {
+    const { error } = await supabase.from("scheduled_notifications").insert({
+      notification_key: input.notificationKey ?? null,
+      type: input.type,
+      title: input.title,
+      body: input.body,
+      url: input.url ?? "/",
+      notify_at: input.notifyAt,
+      sent_at: null,
+    });
+
+    if (error) {
       return NextResponse.json(
-        { error: "Missing required notification fields." },
-        { status: 400 }
+        {
+          error: "Supabase insert failed",
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        },
+        { status: 500 }
       );
     }
 
-    await scheduleNotification({
-      userId: userId ?? null,
-      notificationKey: notificationKey ?? null,
-      type,
-      title,
-      body: messageBody,
-      url: url ?? "/",
-      notifyAt,
-    });
-
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error(error);
-
     return NextResponse.json(
-      { error: "Could not schedule notification." },
+      {
+        error: "Could not schedule notification.",
+        message: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

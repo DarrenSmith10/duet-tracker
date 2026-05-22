@@ -44,7 +44,10 @@ export default function RealtimeSyncPanel() {
 
         <button
           type="button"
-          onClick={startRealtimeSync}
+          onClick={() => {
+            localStorage.setItem("liveSyncEnabled", "true");
+            startRealtimeSync();
+          }}
           className="rounded-xl bg-green-500 px-5 py-3 font-semibold text-zinc-950 hover:bg-green-400"
         >
           Start Live Sync
@@ -52,7 +55,10 @@ export default function RealtimeSyncPanel() {
 
         <button
           type="button"
-          onClick={stopRealtimeSync}
+          onClick={() => {
+            localStorage.setItem("liveSyncEnabled", "false");
+            stopRealtimeSync();
+        }}
           className="rounded-xl bg-red-500 px-5 py-3 font-semibold text-white hover:bg-red-400"
         >
           Stop Live Sync

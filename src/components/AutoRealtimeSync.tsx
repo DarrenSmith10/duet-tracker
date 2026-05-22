@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
+
+
 import {
   REALTIME_SAVE_KEYS,
   isRealtimeSaveKey,
@@ -14,6 +16,11 @@ import {
   subscribeToRealtimeSaves,
   unsubscribeRealtimeSaves,
 } from "@/lib/supabase/realtimeSync";
+
+
+function isLiveSyncEnabled() {
+  return localStorage.getItem("liveSyncEnabled") === "true";
+}
 
 const SYNC_DEBOUNCE_MS = 900;
 
@@ -67,7 +74,9 @@ export default function AutoRealtimeSync() {
       });
     }
 
-    start();
+    if (isLiveSyncEnabled()) {
+  start();
+}
 
     return () => {
       cancelled = true;

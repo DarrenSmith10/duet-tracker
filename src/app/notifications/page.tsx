@@ -9,12 +9,18 @@ export default function NotificationsPage() {
   const [pushEnabled, setPushEnabled] = useState(false);
 
   useEffect(() => {
-  const saved = localStorage.getItem("pushNotificationsEnabled") === "true";
-  const granted =
-    typeof Notification !== "undefined" &&
-    Notification.permission === "granted";
+  async function checkPush() {
+    const granted =
+      typeof Notification !== "undefined" &&
+      Notification.permission === "granted";
 
-  setPushEnabled(saved && granted);
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+
+    setPushEnabled(granted && !!subscription);
+  }
+
+  checkPush().catch(() => setPushEnabled(false));
 }, []);
 
   async function enablePush() {
@@ -22,7 +28,19 @@ export default function NotificationsPage() {
 
   try {
     await subscribeToPush();
+    const registration = await navigator.serviceWorker.ready;
+const subscription = await registration.pushManager.getSubscription();
 
+if (!subscription) {
+  localStorage.setItem("pushNotificationsEnabled", "false");
+  setPushEnabled(false);
+  setStatus("Notifications are allowed, but no push subscription was created.");
+  return;
+}
+
+localStorage.setItem("pushNotificationsEnabled", "true");
+setPushEnabled(true);
+setStatus("Push notifications enabled for this device.");
     localStorage.setItem("pushNotificationsEnabled", "true");
     setPushEnabled(true);
 
@@ -36,6 +54,12 @@ export default function NotificationsPage() {
         : "Could not enable push notifications."
     );
   }
+}
+function resetPushNotifications() {
+  localStorage.removeItem("pushNotificationsEnabled");
+
+  setPushEnabled(false);
+  setStatus("Push notification state reset for this device.");
 }
 
   async function sendTest() {
@@ -77,6 +101,13 @@ export default function NotificationsPage() {
   className="rounded-xl bg-white px-5 py-3 font-semibold text-zinc-950 hover:bg-zinc-200 disabled:opacity-50"
 >
   {pushEnabled ? "Push Notifications Enabled" : "Enable Push Notifications"}
+</button>
+<button
+  type="button"
+  onClick={resetPushNotifications}
+  className="rounded-xl border border-zinc-700 px-5 py-3 font-semibold text-white hover:bg-zinc-800"
+>
+  Reset Push Notifications
 </button>
 
           <button

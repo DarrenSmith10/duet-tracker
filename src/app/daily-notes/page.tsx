@@ -11,6 +11,12 @@ import {
 
 import MonthlyResetPanel from "@/components/MonthlyResetPanel";
 
+import {
+  resetDailyTasksNow,
+  resetWeeklyTasksNow,
+} from "@/lib/activityReset";
+
+
 import ResetNotificationWatcher from "@/components/ResetNotificationWatcher";
 
 import { pushSaveKeyToSupabase } from "@/lib/supabase/realtimeSync";
@@ -345,28 +351,20 @@ export default function DailyNotesPage() {
   }
 
   function resetDailyTasks() {
-    const confirmed = window.confirm("Reset all daily activity progress?");
-    if (!confirmed) return;
+  const confirmed = window.confirm("Reset all daily activity progress?");
+  if (!confirmed) return;
 
-    setDailyTasks((prev) =>
-      prev.map((task) => ({
-        ...task,
-        current: 0,
-      }))
-    );
-  }
+  const resetTasks = resetDailyTasksNow();
+  setDailyTasks(resetTasks as DailyActivityTask[]);
+}
 
   function resetWeeklyTrackers() {
-    const confirmed = window.confirm("Reset all weekly tracker progress?");
-    if (!confirmed) return;
+  const confirmed = window.confirm("Reset all weekly tracker progress?");
+  if (!confirmed) return;
 
-    setWeeklyTrackers((prev) =>
-      prev.map((tracker) => ({
-        ...tracker,
-        current: 0,
-      }))
-    );
-  }
+  const resetTrackers = resetWeeklyTasksNow();
+  setWeeklyTrackers(resetTrackers as WeeklyActivityTracker[]);
+}
 
   function addDailyTask() {
     if (!newDailyTitle.trim()) {

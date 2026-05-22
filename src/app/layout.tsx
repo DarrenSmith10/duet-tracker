@@ -3,6 +3,7 @@
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
+import ActivityAutoReset from "@/components/ActivityAutoReset";
 import AutoRealtimeSync from "@/components/AutoRealtimeSync";
 import ServiceWorkerRegister from "./ServiceWorkerRegister";
 
@@ -15,7 +16,8 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-zinc-950 text-white">
         <ServiceWorkerRegister />
-        <AutoRealtimeSync />
+        <ActivityAutoReset />
+        {/* <AutoRealtimeSync /> */}
         <MobileNav />
         <div className="flex min-h-screen">
           

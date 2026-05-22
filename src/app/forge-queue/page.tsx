@@ -485,9 +485,18 @@ scheduleClientNotification({
   body: `${queueItem.itemName} is ready to claim.`,
   url: "/forge-queue",
   notifyAt,
-}).catch(() => {
-  // Notification scheduling can fail if offline. Forge timer still works.
-});
+})
+  .then((result) => {
+    console.log("Forge notification scheduled:", result);
+  })
+  .catch((error) => {
+    console.error("Forge notification schedule failed:", error);
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Could not schedule forge notification."
+    );
+  });
 
 
     setQueue((prev) => [queueItem, ...prev]);
