@@ -75,11 +75,14 @@ self.addEventListener("push", (event) => {
 
   event.waitUntil(
     self.registration.showNotification(data.title || "DNA Tracker", {
-      body: data.body || "Notification",
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
-      data: {
-        url: data.url || "/",
+  body: data.body || "Notification",
+  icon: "/icons/icon-192.png",
+  badge: "/icons/icon-192.png",
+  tag: data.url || "dna-tracker",
+  renotify: true,
+  requireInteraction: true,
+  data: {
+    url: data.url || "/",
       },
     })
   );
